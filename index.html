@@ -2,30 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Weather App</title>
+  <title>Weather Website</title>
   <style>
     body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #007adf, #00ecbc);
       text-align: center;
-      font-family: Arial;
-      background: linear-gradient(to right, #a1c4fd, #c2e9fb);
-      padding: 50px;
+      padding: 40px;
+      color: #fff;
     }
     select, button {
       padding: 10px;
       font-size: 16px;
       margin: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background-color: #004aad;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #003080;
     }
     #weatherBox {
-      margin-top: 20px;
-      background: #fff;
-      padding: 20px;
+      margin-top: 30px;
+      background: rgba(255, 255, 255, 0.85);
+      color: #000;
+      padding: 25px;
       border-radius: 10px;
       display: inline-block;
+      min-width: 250px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      text-align: left;
     }
   </style>
 </head>
 <body>
-  <h2>🌤 Simple Weather App</h2>
+  <h2>🌤 Weather Website</h2>
 
   <select id="citySelect">
-    <option value="">
+    <option value="">-- Select a City --</option>
+    <option value="19.0760,72.8777">Mumbai</option>
+    <option value="28.6139,77.2090">Delhi</option>
+    <option value="12.9716,77.5946">Bengaluru</option>
+  </select>
+  
+  <button onclick="showWeather()">Show Weather</button>
+
+  <div id="weatherBox">Select a city to view weather info.</div>
+
+  <script>
+    async function showWeather() {
+      const select = document.getElementById("citySelect");
+      const box = document.getElementById("weatherBox");
+      box.textContent = ""; // clear previous
+
+      if (!select.value) {
+        box.innerText = "⚠ Please select a city.";
+        return;
+      }
+
+      const [lat, lon] = select.value.split(",");
+      const city = select.options[select.selectedIndex].text;
+      box.innerText = `📡 Fetching weather for ${city}...`;
+
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+        const res = await fetch(url);
+        const data = await res.json();
+        const w = data.current_weather;
+
+        const utc = new Date(w.time);
+        const ist = new Date(utc.getTime() + 5.5 * 60 * 60 * 1000);
+        const timeStr = ist.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12: true });
+
+        box.innerHTML = `
+          <strong>📍 City:</strong> ${city}<br>
+          <strong>🌡 Temperature:</strong> ${w.temperature}°C<br>
+          <strong>🌬 Wind Speed:</strong> ${w.windspeed} km/h<br>
+          <strong>⏰ IST Time:</strong> ${timeStr}
+        `;
+      } catch (e) {
+        console.error(e);
+        box.innerText = "⚠ Unable to fetch weather data.";
+      }
+    }
+  </script>
+</body>
+</html>
